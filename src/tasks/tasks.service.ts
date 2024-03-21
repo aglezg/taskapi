@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, HttpCode, Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Task } from 'src/schemas/tasks.schema';
 import { Model } from 'mongoose';
@@ -15,11 +15,16 @@ export class TasksService {
   }
 
   async findById(id: string): Promise<Task> {
-    return this.taskModel.findById(id)
+    try {
+      const a = await this.taskModel.findById(id)
+      return a
+    } catch (err) {
+      throw new NotAcceptableException(`invalid ${id} id format`)
+    }
   }
 
-  async findByTitle(title: string): Promise<Task[]> {
-    return this.taskModel.find({title})
+  async findByTitle(title: string): Promise<Task> {
+    return await this.taskModel.findOne({title})
   }
 
   async create(task: CreateTaskDto): Promise<Task> {
@@ -29,18 +34,18 @@ export class TasksService {
   }
 
   async deleteById(id: string): Promise<Task> {
-    return this.taskModel.findByIdAndDelete(id)
+    return await this.taskModel.findByIdAndDelete(id)
   }
 
   async deleteOneByTitle(title: string): Promise<Task> {
-    return this.taskModel.findOneAndDelete({title})
+    return await this.taskModel.findOneAndDelete({title})
   }
 
   async updateById(id: string, task: UpdateTaskDto): Promise<Task> {
-    return this.taskModel.findByIdAndUpdate(id, task, {new: true})
+    return await this.taskModel.findByIdAndUpdate(id, task, {new: true})
   }
 
   async updateOneByTitle(title: string, task: UpdateTaskDto): Promise<Task> {
-    return this.taskModel.findOneAndUpdate({title}, task, {new: true})
+    return await this.taskModel.findOneAndUpdate({title}, task, {new: true})
   }
 }

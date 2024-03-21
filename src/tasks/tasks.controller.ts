@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, NotAcceptableException, NotFoundException, Param, Post, Put } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from 'src/dto/create-task.dto';
 import { UpdateTaskDto } from 'src/dto/update-task.dto';
@@ -15,37 +15,50 @@ export class TasksController {
   }
 
   @Get('/id/:id')
-  findById(@Param('id') id: string): Promise<Task> {
-    return this.taskService.findById(id)
+  async findById(@Param('id') id: string): Promise<Task> {
+    const response = await this.taskService.findById(id)
+    if (!response) throw new NotFoundException(`task with id ${id} not found`)
+    return response
   }
 
   @Get('/title/:title')
-  findByTitle(@Param('title') title: string): Promise<Task[]> {
-    return this.taskService.findByTitle(title)
+  async findByTitle(@Param('title') title: string): Promise<Task> {
+    const response = await this.taskService.findByTitle(title)
+    if (!response) throw new NotFoundException(`task with title ${title} not found`)
+    return response
   }
 
   @Post()
-  create(@Body() body: CreateTaskDto): Promise<Task> {
-    return this.taskService.create(body);
+  async create(@Body() body: CreateTaskDto): Promise<Task> {
+    try {
+      await this.findByTitle(body.title)
+    } catch(err) {
+      return this.taskService.create(body);
+    }
+    throw new ConflictException(`a task with title ${body.title} already exist`)
   }
 
   @Delete('/id/:id')
-  deleteById(@Param('id') id: string): Promise<Task> {
+  async deleteById(@Param('id') id: string): Promise<Task> {
+    await this.findById(id)
     return this.taskService.deleteById(id)
   }
 
   @Delete('/title/:title')
-  deleteOneByTitle(@Param('title') title: string): Promise<Task> {
+  async deleteOneByTitle(@Param('title') title: string): Promise<Task> {
+    await this.findByTitle(title)
     return this.taskService.deleteOneByTitle(title)
   }
 
   @Put('/id/:id')
-  updateById(@Param('id') id: string, @Body() body: UpdateTaskDto): Promise<Task> {
+  async updateById(@Param('id') id: string, @Body() body: UpdateTaskDto): Promise<Task> {
+    await this.findById(id)
     return this.taskService.updateById(id, body)
   }
 
   @Put('/title/:title')
-  updateOneByTitle(@Param('title') title: string, @Body() body: UpdateTaskDto): Promise<Task> {
+  async updateOneByTitle(@Param('title') title: string, @Body() body: UpdateTaskDto): Promise<Task> {
+    await this.findByTitle(title)
     return this.taskService.updateOneByTitle(title, body)
   }
 }
