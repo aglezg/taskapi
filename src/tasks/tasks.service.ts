@@ -16,8 +16,8 @@ export class TasksService {
 
   async findById(id: string): Promise<Task> {
     try {
-      const a = await this.taskModel.findById(id)
-      return a
+      const task = await this.taskModel.findById(id)
+      return task
     } catch (err) {
       throw new NotAcceptableException(`invalid ${id} id format`)
     }
